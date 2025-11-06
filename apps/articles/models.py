@@ -47,3 +47,15 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.author} on {self.article}'
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'article')
+
+    def __str__(self):
+        return f'{self.user} ❤ {self.article}'

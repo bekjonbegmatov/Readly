@@ -1,15 +1,50 @@
 {% extends 'base.html' %}
 {% block content %}
 <section>
-  <h1 class="section-title">Поиск: {{ query }}</h1>
-  <div class="cards">
+  <h1 class="text-xl font-semibold mb-3">Поиск: {{ query }}</h1>
+  {% if authors %}
+  <div class="mb-4">
+    <h2 class="text-base font-semibold mb-2">Авторы</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {% for u in authors %}
+      <a href="/u/{{ u.username }}/" class="p-3 border border-gray-200 rounded-xl bg-white shadow-soft flex items-center gap-3">
+        {% with prof=u.profile %}
+          {% if prof.avatar %}
+            <img src="{{ prof.avatar.url }}" alt="{{ u.username }}" class="w-10 h-10 rounded-full object-cover border border-gray-200" />
+          {% else %}
+            <div class="w-10 h-10 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-600 font-semibold">{{ u.username|slice:":1"|upper }}</div>
+          {% endif %}
+        {% endwith %}
+        <div class="flex-1">
+          <div class="text-sm font-semibold">{{ u.first_name }} {{ u.last_name }}</div>
+          <div class="text-xs text-gray-500">@{{ u.username }}</div>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  <div class="space-y-2">
     {% for a in results %}
-      <article class="card">
-        <h2 class="card-title"><a href="/article/{{ a.pk }}/">{{ a.title }}</a></h2>
-        <p class="meta">@{{ a.author.username }} • {{ a.created_at|date:'d.m.Y' }}</p>
+      <article class="p-3 border border-gray-200 rounded-xl bg-white shadow-soft flex items-start gap-3">
+        {% if a.cover %}
+          <img src="{{ a.cover.url }}" alt="{{ a.title }}" class="w-16 h-16 object-cover rounded-md">
+        {% else %}
+          <div class="w-16 h-16 rounded-md border border-gray-200 bg-gray-100 flex items-center justify-center"><i data-lucide="image" class="w-5 h-5 text-gray-400"></i></div>
+        {% endif %}
+        <div class="flex-1">
+          <h2 class="text-base font-semibold leading-snug"><a class="hover:text-brand" href="/article/{{ a.pk }}/">{{ a.title }}</a></h2>
+          <p class="text-gray-500 text-sm"><a class="hover:text-brand" href="/u/{{ a.author.username }}/">@{{ a.author.username }}</a> • {{ a.created_at|date:'d.m.Y' }}</p>
+          <p class="text-gray-500 text-xs flex items-center gap-3 mt-1">
+            <span class="inline-flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> {{ a.likes_total|default:a.likes_count }}</span>
+            <span class="inline-flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> {{ a.comments_total|default:a.comments_count }}</span>
+          </p>
+        </div>
+        <a href="/article/{{ a.pk }}/favorite/" class="text-gray-400 hover:text-brand" aria-label="В избранное"><i data-lucide="bookmark" class="w-5 h-5"></i></a>
       </article>
     {% empty %}
-      <p>Ничего не найдено.</p>
+      <p class="text-gray-500">Ничего не найдено.</p>
     {% endfor %}
   </div>
 </section>

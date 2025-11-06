@@ -7,16 +7,147 @@
     <label>Заголовок
       {{ form.title }}
     </label>
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-2 text-gray-600">
+        <button type="button" class="icon-btn" aria-label="Жирный"><i data-lucide="bold" class="w-5 h-5"></i></button>
+        <button type="button" class="icon-btn" aria-label="Курсив"><i data-lucide="italic" class="w-5 h-5"></i></button>
+        <button type="button" class="icon-btn" aria-label="Заголовок"><i data-lucide="heading" class="w-5 h-5"></i></button>
+        <button type="button" class="icon-btn" aria-label="Ссылка"><i data-lucide="link" class="w-5 h-5"></i></button>
+        <button type="button" class="icon-btn" aria-label="Фото"><i data-lucide="image" class="w-5 h-5"></i></button>
+      </div>
+      <!-- preview toggle removed from toolbar; moved near submit button -->
+    </div>
     <label>Контент (Markdown)
       {{ form.content }}
     </label>
     <label>Обложка
       {{ form.cover }}
     </label>
+    <label>Ссылка на обложку (URL)
+      {{ form.cover_url }}
+      <p class="text-xs text-gray-500 mt-1">Укажите адрес изображения из интернета, если не загружаете файл.</p>
+    </label>
     <label>Теги (через запятую)
       {{ form.tags_input }}
     </label>
-    <button type="submit" class="btn">Опубликовать</button>
+    <div class="mt-3 flex items-center gap-2">
+      <button type="submit" class="inline-flex items-center gap-2 rounded-md bg-green-600 hover:bg-green-700 px-3 py-2 text-white shadow-soft">
+        <i data-lucide="send" class="w-4 h-4"></i> Опубликовать
+      </button>
+      <button type="button" class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700" id="previewToggle">
+        <i data-lucide="eye" class="w-4 h-4"></i> Предпросмотр
+      </button>
+    </div>
   </form>
+  <!-- Overlay preview -->
+  <div id="previewOverlay" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="relative mx-auto mt-8 max-w-3xl rounded-xl bg-white shadow-2xl">
+      <div class="flex items-center justify-between border-b px-4 py-3">
+        <h2 class="text-lg font-semibold">Предпросмотр статьи</h2>
+        <button type="button" id="previewClose" class="icon-btn" aria-label="Закрыть">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="px-4 py-4">
+        <h1 id="previewTitle" class="text-2xl font-bold mb-3"></h1>
+        <div id="previewBody" class="prose max-w-none"></div>
+      </div>
+    </div>
+  </div>
 </section>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const titleInput = document.querySelector('input[name="title"]');
+    const textarea = document.querySelector('textarea[name="content"]');
+    const previewBtn = document.getElementById('previewToggle');
+    const overlay = document.getElementById('previewOverlay');
+    const overlayClose = document.getElementById('previewClose');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewBody = document.getElementById('previewBody');
+
+    function wrapSelection(prefix, suffix=''){
+      const start = textarea.selectionStart, end = textarea.selectionEnd;
+      const sel = textarea.value.substring(start, end) || '';
+      const before = textarea.value.substring(0, start);
+      const after = textarea.value.substring(end);
+      textarea.value = before + prefix + sel + (suffix || '') + after;
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + prefix.length + sel.length + suffix.length;
+    }
+
+    const toolbar = {
+      'Жирный': () => wrapSelection('**','**'),
+      'Курсив': () => wrapSelection('*','*'),
+      'Заголовок': () => wrapSelection('# '),
+      'Ссылка': () => wrapSelection('[текст](https://)'),
+      'Фото': () => wrapSelection('![](https://)')
+    };
+
+    document.querySelectorAll('.icon-btn').forEach(btn => {
+      const label = btn.getAttribute('aria-label');
+      if (toolbar[label]) btn.addEventListener('click', toolbar[label]);
+    });
+
+    // Overlay preview
+    function openPreview(){
+      previewTitle.textContent = (titleInput?.value || '').trim() || 'Без заголовка';
+      previewBody.innerHTML = window.marked ? window.marked.parse(textarea?.value || '') : (textarea?.value || '').replace(/\n/g,'<br>');
+      overlay.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+    function closePreview(){
+      overlay.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+    previewBtn?.addEventListener('click', openPreview);
+    overlayClose?.addEventListener('click', closePreview);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closePreview(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePreview(); });
+
+    // Плейсхолдер превью обложки (если не выбрано изображение)
+    const coverInput = document.querySelector('input[type="file"][name="cover"]');
+    const coverUrlInput = document.querySelector('input[name="cover_url"]');
+    if (coverInput){
+      // Custom file input UI
+      coverInput.classList.add('sr-only');
+      const wrapper = document.createElement('div');
+      wrapper.className = 'mt-1 flex items-center gap-3';
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700';
+      trigger.innerHTML = '<i data-lucide="upload" class="w-4 h-4"></i> Выбрать файл';
+      const namePreview = document.createElement('span');
+      namePreview.className = 'text-xs text-gray-600 truncate max-w-[220px]';
+      namePreview.textContent = 'Файл не выбран';
+      coverInput.parentNode.insertBefore(wrapper, coverInput.nextSibling);
+      wrapper.appendChild(trigger);
+      wrapper.appendChild(namePreview);
+      trigger.addEventListener('click', () => coverInput.click());
+      coverInput.addEventListener('change', () => {
+        if (coverInput.files && coverInput.files.length > 0){
+          namePreview.textContent = coverInput.files[0].name;
+        } else {
+          namePreview.textContent = 'Файл не выбран';
+        }
+      });
+
+      // Placeholder preview block
+      coverInput.insertAdjacentHTML('afterend', '<div id="coverPlaceholder" class="mt-2 w-full h-32 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center"><i data-lucide="image" class="w-6 h-6 text-gray-400"></i></div>');
+      coverInput.addEventListener('change', () => {
+        const ph = document.getElementById('coverPlaceholder');
+        if (!coverInput.files || coverInput.files.length === 0){ ph.classList.remove('hidden'); }
+        else { ph.classList.add('hidden'); }
+      });
+      // Скрывать плейсхолдер, если введён URL
+      coverUrlInput?.addEventListener('input', () => {
+        const ph = document.getElementById('coverPlaceholder');
+        if (!ph) return;
+        const hasUrl = coverUrlInput.value.trim().length > 0;
+        const hasFile = coverInput.files && coverInput.files.length > 0;
+        if (hasUrl || hasFile) ph.classList.add('hidden'); else ph.classList.remove('hidden');
+      });
+    }
+  });
+</script>
 {% endblock %}

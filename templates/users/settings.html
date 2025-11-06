@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="max-w-md mx-auto">
+  <h1 class="text-xl font-semibold mb-3">Настройки профиля</h1>
+  <form method="post" enctype="multipart/form-data" class="space-y-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div>
+        <label class="text-sm text-gray-600">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<small class="text-red-600 text-xs">{{ field.errors|join:', ' }}</small>{% endif %}
+      </div>
+    {% endfor %}
+    <div>
+      <label class="text-sm text-gray-600">Фото профиля</label>
+      {{ avatar_form.avatar }}
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="submit" class="inline-flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-white shadow-soft">
+        <i data-lucide="save" class="w-4 h-4"></i> Сохранить
+      </button>
+      <a href="/u/{{ user.username }}/" class="text-gray-600">Отмена</a>
+      <span class="flex-1"></span>
+      <a href="/logout/" class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700">
+        <i data-lucide="log-out" class="w-4 h-4"></i> Выйти
+      </a>
+    </div>
+  </form>
+</section>
+{% endblock %}

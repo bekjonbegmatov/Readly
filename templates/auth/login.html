@@ -1,16 +1,21 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="form-section">
-  <h1>Вход</h1>
-  <form method="post" class="form">
+<section class="max-w-md mx-auto">
+  <h1 class="text-xl font-semibold mb-3">Вход</h1>
+  <form method="post" class="space-y-3">
     {% csrf_token %}
-    <label>Имя пользователя
-      <input type="text" name="username" required>
-    </label>
-    <label>Пароль
-      <input type="password" name="password" required>
-    </label>
-    <button type="submit" class="btn">Войти</button>
+    <div>
+      <label class="text-sm text-gray-600">Имя пользователя</label>
+      <input type="text" name="username" required class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 outline-none focus:border-brand focus:ring-4 focus:ring-brand/20">
+    </div>
+    <div>
+      <label class="text-sm text-gray-600">Пароль</label>
+      <input type="password" name="password" required class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 outline-none focus:border-brand focus:ring-4 focus:ring-brand/20">
+    </div>
+    <button type="submit" class="inline-flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-white shadow-soft">
+      <i data-lucide="log-in" class="w-4 h-4"></i> Войти
+    </button>
   </form>
-  <p>Нет аккаунта? <a href="/signup/">Зарегистрируйтесь</a></p>
+  <p class="text-gray-600 mt-2">Нет аккаунта? <a class="text-brand" href="/signup/">Зарегистрируйтесь</a></p>
+</section>
 {% endblock %}

@@ -1,0 +1,5 @@
+{% for a in articles %}
+  {% include 'articles/_item.html' %}
+{% empty %}
+  <p class="text-gray-500">Пока нет статей.</p>
+{% endfor %}

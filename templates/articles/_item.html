@@ -1,0 +1,19 @@
+{% load static %}
+<article class="p-3 border border-gray-200 rounded-xl bg-white shadow-soft flex items-start gap-3">
+  {% if a.cover %}
+    <img src="{{ a.cover.url }}" alt="{{ a.title }}" class="w-16 h-16 object-cover rounded-md">
+  {% else %}
+    <div class="w-16 h-16 rounded-md border border-gray-200 bg-gray-100 flex items-center justify-center">
+      <i data-lucide="image" class="w-5 h-5 text-gray-400"></i>
+    </div>
+  {% endif %}
+  <div class="flex-1">
+    <h2 class="text-base font-semibold leading-snug"><a class="hover:text-brand" href="/article/{{ a.pk }}/">{{ a.title }}</a></h2>
+    <p class="text-gray-500 text-sm">{{ a.created_at|date:'d.m.Y' }} • <a class="hover:text-brand" href="/u/{{ a.author.username }}/">@{{ a.author.username }}</a></p>
+    <p class="text-gray-500 text-xs flex items-center gap-3 mt-1">
+      <span class="inline-flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> {{ a.likes_total|default:a.likes_count }}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> {{ a.comments_total|default:a.comments_count }}</span>
+    </p>
+  </div>
+  <a href="/article/{{ a.pk }}/favorite/" class="text-gray-400 hover:text-brand" aria-label="В избранное"><i data-lucide="bookmark" class="w-5 h-5"></i></a>
+</article>

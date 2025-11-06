@@ -1,28 +1,70 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="profile">
-  <div class="profile-header">
-    <div class="avatar-lg">{{ profile_user.username|slice:":1"|upper }}</div>
+<section class="space-y-4">
+  <div class="flex flex-col items-center text-center gap-2">
+    {% if profile.avatar %}
+      <img src="{{ profile.avatar.url }}" alt="avatar" class="w-24 h-24 rounded-full object-cover border border-gray-200" />
+    {% else %}
+      <div id="avatarPlaceholder" class="inline-flex items-center justify-center rounded-full w-24 h-24 text-gray-700 text-2xl font-semibold border border-gray-200" data-bg="{{ avatar_bg }}">
+        {{ profile_user.username|slice:":1"|upper }}
+      </div>
+    {% endif %}
     <div>
-      <h1>@{{ profile_user.username }}</h1>
-      <p>Подписчики: {{ followers_count }} • Подписки: {{ following_count }}</p>
-      <p>Лайков: {{ total_likes }} • Комментариев: {{ total_comments }}</p>
+      <div class="text-lg font-semibold">{{ profile_user.first_name }} {{ profile_user.last_name }}</div>
+      <div class="text-gray-600">@{{ profile_user.username }}</div>
+    </div>
+    <div class="flex items-center gap-4 text-sm text-gray-600">
+      <span>Подписчики: {{ followers_count }}</span>
+      <span>Подписки: {{ following_count }}</span>
+      <span>Лайков: {{ total_likes }}</span>
+      <span>Комментариев: {{ total_comments }}</span>
+    </div>
+    <div>
       {% if user.is_authenticated and user != profile_user %}
-        <a class="btn" href="/u/{{ profile_user.username }}/follow/">{% if is_following %}Отписаться{% else %}Подписаться{% endif %}</a>
+        <a class="inline-flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-white shadow-soft" href="/u/{{ profile_user.username }}/follow/">
+          <i data-lucide="user-plus" class="w-4 h-4"></i> {% if is_following %}Отписаться{% else %}Подписаться{% endif %}
+        </a>
+      {% elif user.is_authenticated and user == profile_user %}
+        <a class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 mr-2" href="/settings/profile/">
+          <i data-lucide="settings" class="w-4 h-4"></i> Редактировать профиль
+        </a>
+        <a class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700" href="/logout/">
+          <i data-lucide="log-out" class="w-4 h-4"></i> Выйти
+        </a>
       {% endif %}
     </div>
   </div>
 
-  <h2>Статьи</h2>
-  <div class="cards">
+  {# Загрузка аватара перенесена в настройки профиля #}
+
+  <h2 class="text-lg font-semibold">Статьи</h2>
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
     {% for a in articles %}
-      <article class="card">
-        <h3 class="card-title"><a href="/article/{{ a.pk }}/">{{ a.title }}</a></h3>
-        <p class="meta">{{ a.created_at|date:'d.m.Y' }}</p>
+      <article class="p-4 border border-gray-200 rounded-xl bg-white shadow-soft">
+        <h3 class="text-base font-semibold"><a class="hover:text-brand" href="/article/{{ a.pk }}/">{{ a.title }}</a></h3>
+        <p class="text-gray-500 text-sm">{{ a.created_at|date:'d.m.Y' }}</p>
       </article>
     {% empty %}
-      <p>Нет опубликованных статей.</p>
+      <p class="text-gray-500">Нет опубликованных статей.</p>
     {% endfor %}
   </div>
 </section>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('avatarPlaceholder');
+    if (el && el.dataset && el.dataset.bg) {
+      el.style.background = el.dataset.bg;
+    }
+    // Кастомный выбор файла и скрытие стандартного имени
+    const input = document.getElementById('id_avatar');
+    const fn = document.getElementById('avatarFilename');
+    if (input){
+      input.classList.add('sr-only');
+      input.addEventListener('change', () => {
+        if (input.files && input.files.length){ fn.textContent = input.files[0].name; }
+        else { fn.textContent = ''; }
+      });
+    }
+  });
+</script>
 {% endblock %}

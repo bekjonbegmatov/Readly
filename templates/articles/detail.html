@@ -1,45 +1,90 @@
 {% extends 'base.html' %}
 {% block content %}
-<article class="article">
-  <header>
-    <h1>{{ article.title }}</h1>
-    <p class="meta">@{{ article.author.username }} • {{ article.created_at|date:'d.m.Y' }}</p>
-    <p class="tags">
-      {% for t in article.tags.all %}<span class="tag">#{{ t.name }}</span>{% endfor %}
+<article class="space-y-4">
+  <div class="flex items-center justify-between">
+    <a href="/" class="text-gray-500 hover:text-brand inline-flex items-center gap-1"><i data-lucide="chevron-left" class="w-5 h-5"></i> Назад</a>
+    <div class="flex items-center gap-2">
+      <button class="icon-btn" aria-label="Размер шрифта"><i data-lucide="type" class="w-5 h-5"></i></button>
+      <a href="/article/{{ article.pk }}/favorite/" class="icon-btn {% if is_favorite %}text-brand{% endif %}" aria-label="Закладка"><i data-lucide="bookmark" class="w-5 h-5"></i></a>
+      <button class="icon-btn" aria-label="Поделиться"><i data-lucide="share" class="w-5 h-5"></i></button>
+    </div>
+  </div>
+  <header class="space-y-2">
+    <h1 class="text-2xl font-semibold">{{ article.title }}</h1>
+    <p class="text-gray-500 text-sm"><a class="hover:text-brand" href="/u/{{ article.author.username }}/">@{{ article.author.username }}</a> • {{ article.created_at|date:'d.m.Y' }}</p>
+    <p class="flex flex-wrap gap-1">
+      {% for t in article.tags.all %}<span class="px-2 py-0.5 rounded-full border text-xs bg-blue-50 border-blue-100 text-slate-800">#{{ t.name }}</span>{% endfor %}
     </p>
-    {% if article.cover %}<img src="{{ article.cover.url }}" alt="{{ article.title }}" class="cover-lg">{% endif %}
+    {% if article.cover %}
+      <img src="{{ article.cover.url }}" alt="{{ article.title }}" class="w-full max-h-[380px] object-cover rounded-xl border border-gray-200">
+    {% else %}
+      <div class="w-full h-52 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center">
+        <i data-lucide="image" class="w-8 h-8 text-gray-400"></i>
+      </div>
+    {% endif %}
   </header>
-  <div class="content">{{ content_html|safe }}</div>
-  <div class="actions-line">
+  <div class="prose max-w-none">{{ content_html|safe }}</div>
+  <div class="flex items-center gap-2">
     <form action="/article/{{ article.pk }}/like/" method="post">
       {% csrf_token %}
-      <button class="btn" type="submit">❤️ {{ article.likes_count }}</button>
+      <button class="inline-flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-white shadow-soft" type="submit">
+        <i data-lucide="heart" class="w-4 h-4"></i> {{ article.likes_count }}
+      </button>
     </form>
-    <span class="counter">💬 {{ article.comments_count }}</span>
+    <span class="text-gray-600 text-sm inline-flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> {{ article.comments_count }}</span>
   </div>
 
-  <section class="comments">
-    <h2>Комментарии</h2>
-    <div class="list">
+  <section class="pt-2">
+    <h2 class="text-lg font-semibold mb-2">Комментарии</h2>
+    <div class="space-y-3">
       {% for c in comments %}
-        <div class="comment">
-          <p class="meta">@{{ c.author.username }} • {{ c.created_at|date:'d.m.Y H:i' }}</p>
-          <div class="text">{{ c.text }}</div>
+        <div class="border-t border-gray-200 pt-2">
+          <p class="text-gray-500 text-sm">@{{ c.author.username }} • {{ c.created_at|date:'d.m.Y H:i' }}</p>
+          <div class="text-gray-800">{{ c.text }}</div>
         </div>
       {% empty %}
-        <p>Комментариев пока нет.</p>
+        <p class="text-gray-500">Комментариев пока нет.</p>
       {% endfor %}
     </div>
 
     {% if user.is_authenticated %}
-    <form action="" method="post" class="comment-form">
+    <form action="" method="post" class="mt-3 space-y-2">
       {% csrf_token %}
       {{ comment_form.text }}
-      <button class="btn" type="submit">Отправить</button>
+      <button class="inline-flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-white shadow-soft" type="submit">
+        <i data-lucide="send" class="w-4 h-4"></i> Отправить
+      </button>
     </form>
     {% else %}
-    <p><a href="/login/">Войдите</a>, чтобы комментировать.</p>
+    <p class="text-gray-600"><a class="text-brand" href="/login/">Войдите</a>, чтобы комментировать.</p>
     {% endif %}
   </section>
 </article>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const articleEl = document.querySelector('.prose');
+    const fontBtn = document.querySelector('button[aria-label="Размер шрифта"]');
+    const shareBtn = document.querySelector('button[aria-label="Поделиться"]');
+    const bookmarkBtn = document.querySelector('a[aria-label="Закладка"]');
+
+    // Переключение размера шрифта
+    let large = false;
+    fontBtn?.addEventListener('click', () => {
+      large = !large;
+      articleEl?.classList.toggle('prose-lg', large);
+    });
+
+    // Шаринг
+    shareBtn?.addEventListener('click', async () => {
+      const data = { title: document.title, text: '{{ article.title }}', url: window.location.href };
+      if (navigator.share) {
+        try { await navigator.share(data); } catch(e){}
+      } else {
+        try { await navigator.clipboard.writeText(window.location.href); alert('Ссылка скопирована'); } catch(e){}
+      }
+    });
+
+    // Переключатель избранного обрабатывается на сервере по ссылке
+  });
+</script>
 {% endblock %}

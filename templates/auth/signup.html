@@ -1,16 +1,20 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="form-section">
-  <h1>Регистрация</h1>
-  <form method="post" class="form">
+<section class="max-w-md mx-auto">
+  <h1 class="text-xl font-semibold mb-3">Регистрация</h1>
+  <form method="post" class="space-y-3">
     {% csrf_token %}
     {{ form.non_field_errors }}
     {% for field in form %}
-      <label>{{ field.label }}
+      <div>
+        <label class="text-sm text-gray-600">{{ field.label }}</label>
         {{ field }}
-        {% if field.errors %}<small class="error">{{ field.errors|join:', ' }}</small>{% endif %}
-      </label>
+        {% if field.errors %}<small class="text-red-600 text-xs">{{ field.errors|join:', ' }}</small>{% endif %}
+      </div>
     {% endfor %}
-    <button type="submit" class="btn">Создать аккаунт</button>
+    <button type="submit" class="inline-flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-white shadow-soft">
+      <i data-lucide="user-plus" class="w-4 h-4"></i> Создать аккаунт
+    </button>
   </form>
+</section>
 {% endblock %}
