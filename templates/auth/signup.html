@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="form-section">
+  <h1>Регистрация</h1>
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <label>{{ field.label }}
+        {{ field }}
+        {% if field.errors %}<small class="error">{{ field.errors|join:', ' }}</small>{% endif %}
+      </label>
+    {% endfor %}
+    <button type="submit" class="btn">Создать аккаунт</button>
+  </form>
+{% endblock %}

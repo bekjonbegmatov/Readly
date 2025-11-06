@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<article class="article">
+  <header>
+    <h1>{{ article.title }}</h1>
+    <p class="meta">@{{ article.author.username }} • {{ article.created_at|date:'d.m.Y' }}</p>
+    <p class="tags">
+      {% for t in article.tags.all %}<span class="tag">#{{ t.name }}</span>{% endfor %}
+    </p>
+    {% if article.cover %}<img src="{{ article.cover.url }}" alt="{{ article.title }}" class="cover-lg">{% endif %}
+  </header>
+  <div class="content">{{ content_html|safe }}</div>
+  <div class="actions-line">
+    <form action="/article/{{ article.pk }}/like/" method="post">
+      {% csrf_token %}
+      <button class="btn" type="submit">❤️ {{ article.likes_count }}</button>
+    </form>
+    <span class="counter">💬 {{ article.comments_count }}</span>
+  </div>
+
+  <section class="comments">
+    <h2>Комментарии</h2>
+    <div class="list">
+      {% for c in comments %}
+        <div class="comment">
+          <p class="meta">@{{ c.author.username }} • {{ c.created_at|date:'d.m.Y H:i' }}</p>
+          <div class="text">{{ c.text }}</div>
+        </div>
+      {% empty %}
+        <p>Комментариев пока нет.</p>
+      {% endfor %}
+    </div>
+
+    {% if user.is_authenticated %}
+    <form action="" method="post" class="comment-form">
+      {% csrf_token %}
+      {{ comment_form.text }}
+      <button class="btn" type="submit">Отправить</button>
+    </form>
+    {% else %}
+    <p><a href="/login/">Войдите</a>, чтобы комментировать.</p>
+    {% endif %}
+  </section>
+</article>
+{% endblock %}

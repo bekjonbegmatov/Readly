@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+  <h1 class="section-title">Лента</h1>
+  <div class="cards">
+    {% for a in articles %}
+      <article class="card">
+        {% if a.cover %}<img src="{{ a.cover.url }}" alt="{{ a.title }}" class="cover">{% endif %}
+        <div class="card-body">
+          <h2 class="card-title"><a href="/article/{{ a.pk }}/">{{ a.title }}</a></h2>
+          <p class="meta">@{{ a.author.username }} • {{ a.created_at|date:'d.m.Y' }}</p>
+          <p class="tags">
+            {% for t in a.tags.all %}<span class="tag">#{{ t.name }}</span>{% empty %}<span class="tag">без тегов</span>{% endfor %}
+          </p>
+        </div>
+      </article>
+    {% empty %}
+      <p>Пока нет статей.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h1 class="section-title">Рекомендовано</h1>
+  <div class="cards compact">
+    {% for r in recommended %}
+      <article class="card compact">
+        <h3 class="card-title"><a href="/article/{{ r.pk }}/">{{ r.title }}</a></h3>
+        <p class="meta">@{{ r.author.username }}</p>
+      </article>
+    {% empty %}
+      <p>Пока нет рекомендаций.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

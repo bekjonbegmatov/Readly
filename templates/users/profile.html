@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="profile">
+  <div class="profile-header">
+    <div class="avatar-lg">{{ profile_user.username|slice:":1"|upper }}</div>
+    <div>
+      <h1>@{{ profile_user.username }}</h1>
+      <p>Подписчики: {{ followers_count }} • Подписки: {{ following_count }}</p>
+      <p>Лайков: {{ total_likes }} • Комментариев: {{ total_comments }}</p>
+      {% if user.is_authenticated and user != profile_user %}
+        <a class="btn" href="/u/{{ profile_user.username }}/follow/">{% if is_following %}Отписаться{% else %}Подписаться{% endif %}</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <h2>Статьи</h2>
+  <div class="cards">
+    {% for a in articles %}
+      <article class="card">
+        <h3 class="card-title"><a href="/article/{{ a.pk }}/">{{ a.title }}</a></h3>
+        <p class="meta">{{ a.created_at|date:'d.m.Y' }}</p>
+      </article>
+    {% empty %}
+      <p>Нет опубликованных статей.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

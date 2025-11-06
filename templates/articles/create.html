@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="form-section">
+  <h1>Новая статья</h1>
+  <form action="" method="post" enctype="multipart/form-data" class="form">
+    {% csrf_token %}
+    <label>Заголовок
+      {{ form.title }}
+    </label>
+    <label>Контент (Markdown)
+      {{ form.content }}
+    </label>
+    <label>Обложка
+      {{ form.cover }}
+    </label>
+    <label>Теги (через запятую)
+      {{ form.tags_input }}
+    </label>
+    <button type="submit" class="btn">Опубликовать</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+  <h1 class="section-title">Поиск: {{ query }}</h1>
+  <div class="cards">
+    {% for a in results %}
+      <article class="card">
+        <h2 class="card-title"><a href="/article/{{ a.pk }}/">{{ a.title }}</a></h2>
+        <p class="meta">@{{ a.author.username }} • {{ a.created_at|date:'d.m.Y' }}</p>
+      </article>
+    {% empty %}
+      <p>Ничего не найдено.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
