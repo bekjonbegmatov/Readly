@@ -86,8 +86,8 @@
           <h3 class="text-base font-semibold leading-snug"><a class="hover:text-brand" href="/article/{{ r.pk }}/">{{ r.title }}</a></h3>
           <p class="text-gray-500 text-sm"><a class="hover:text-brand" href="/u/{{ r.author.username }}/">@{{ r.author.username }}</a></p>
           <p class="text-gray-500 text-xs flex items-center gap-3 mt-1">
-            <span class="inline-flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> {{ r.likes_count }}</span>
-            <span class="inline-flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> {{ r.comments_count }}</span>
+            <span class="inline-flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> {{ r.likes_total|default:r.likes_count }}</span>
+            <span class="inline-flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> {{ r.comments_total|default:r.comments_count }}</span>
           </p>
         </div>
         <a href="/article/{{ r.pk }}/favorite/" class="text-gray-400 hover:text-brand" aria-label="В избранное"><i data-lucide="bookmark" class="w-5 h-5"></i></a>
