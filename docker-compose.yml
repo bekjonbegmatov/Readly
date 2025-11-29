@@ -1,10 +1,9 @@
-version: '3.9'
-
 services:
   web:
     build: .
     image: readly-web
     container_name: readly-web
+    restart: unless-stopped
     environment:
       - DJANGO_SETTINGS_MODULE=server.settings
       - PYTHONUNBUFFERED=1
@@ -19,6 +18,7 @@ services:
     container_name: readly-nginx
     depends_on:
       - web
+    restart: unless-stopped
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - media:/app/media:ro
@@ -29,4 +29,3 @@ services:
 volumes:
   media:
   staticfiles:
-
