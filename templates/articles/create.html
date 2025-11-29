@@ -2,21 +2,12 @@
 {% block content %}
 <section class="form-section">
   <h1>Новая статья</h1>
-  <form action="" method="post" enctype="multipart/form-data" class="form">
+  <form action="" method="post" enctype="multipart/form-data" class="form" id="articleForm" novalidate>
     {% csrf_token %}
     <label>Заголовок
       {{ form.title }}
     </label>
-    <div class="flex items-center justify-between mb-2">
-      <div class="flex items-center gap-2 text-gray-600">
-        <button type="button" class="icon-btn" aria-label="Жирный"><i data-lucide="bold" class="w-5 h-5"></i></button>
-        <button type="button" class="icon-btn" aria-label="Курсив"><i data-lucide="italic" class="w-5 h-5"></i></button>
-        <button type="button" class="icon-btn" aria-label="Заголовок"><i data-lucide="heading" class="w-5 h-5"></i></button>
-        <button type="button" class="icon-btn" aria-label="Ссылка"><i data-lucide="link" class="w-5 h-5"></i></button>
-        <button type="button" class="icon-btn" aria-label="Фото"><i data-lucide="image" class="w-5 h-5"></i></button>
-      </div>
-      <!-- preview toggle removed from toolbar; moved near submit button -->
-    </div>
+    <!-- Улучшенный редактор Markdown будет подключен ниже через EasyMDE -->
     <label>Контент (Markdown)
       {{ form.content }}
     </label>
@@ -56,10 +47,33 @@
     </div>
   </div>
 </section>
+<!-- EasyMDE (CDN) -->
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const titleInput = document.querySelector('input[name="title"]');
     const textarea = document.querySelector('textarea[name="content"]');
+    const formEl = document.getElementById('articleForm');
+    let easyMDE = null;
+    if (window.EasyMDE && textarea) {
+      easyMDE = new EasyMDE({
+        element: textarea,
+        autofocus: true,
+        spellChecker: false,
+        status: false,
+        autosave: { enabled: true, uniqueId: 'readly_article_content', delay: 5000 },
+        placeholder: 'Напишите содержимое в Markdown…',
+        renderingConfig: { singleLineBreaks: false },
+        toolbar: [
+          'bold','italic','heading','quote','unordered-list','ordered-list',
+          'link','image','table','code','horizontal-rule','preview','side-by-side','guide'
+        ]
+      });
+      // Синхронизация значения и отключение HTML5 required на скрытом textarea
+      try { textarea.removeAttribute('required'); } catch(e){}
+      formEl?.addEventListener('submit', () => { try { textarea.value = easyMDE.value(); } catch(e){} });
+    }
     const previewBtn = document.getElementById('previewToggle');
     const overlay = document.getElementById('previewOverlay');
     const overlayClose = document.getElementById('previewClose');
@@ -92,7 +106,8 @@
     // Overlay preview
     function openPreview(){
       previewTitle.textContent = (titleInput?.value || '').trim() || 'Без заголовка';
-      previewBody.innerHTML = window.marked ? window.marked.parse(textarea?.value || '') : (textarea?.value || '').replace(/\n/g,'<br>');
+      const mdSource = easyMDE ? easyMDE.value() : (textarea?.value || '');
+      previewBody.innerHTML = window.marked ? window.marked.parse(mdSource) : mdSource.replace(/\n/g,'<br>');
       overlay.classList.remove('hidden');
       document.body.classList.add('overflow-hidden');
     }
@@ -102,7 +117,10 @@
     }
     previewBtn?.addEventListener('click', openPreview);
     overlayClose?.addEventListener('click', closePreview);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) closePreview(); });
+    overlay.addEventListener('click', (e) => {
+      const modal = overlay.querySelector('.relative.mx-auto');
+      if (!modal || !modal.contains(e.target)) closePreview();
+    });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePreview(); });
 
     // Плейсхолдер превью обложки (если не выбрано изображение)

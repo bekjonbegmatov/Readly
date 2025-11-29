@@ -14,7 +14,18 @@ from .forms import ArticleForm, CommentForm
 
 
 def render_markdown(text: str) -> str:
-    return markdown(text or "")
+    return markdown(
+        text or "",
+        extensions=[
+            'extra',
+            'sane_lists',
+            'fenced_code',
+            'tables',
+            'attr_list',
+            'nl2br',
+            'toc',
+        ]
+    )
 
 
 def home(request):
