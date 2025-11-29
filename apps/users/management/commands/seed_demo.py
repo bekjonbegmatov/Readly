@@ -2,6 +2,9 @@ import os
 import random
 import string
 from pathlib import Path
+from datetime import datetime, timedelta
+
+from django.utils import timezone
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
@@ -32,6 +35,7 @@ class Command(BaseCommand):
         parser.add_argument('--avatar_dir', type=str, default='/Users/behruz/Documents/ESSTUM/Web Programming/Readly/media/avatars/example', help='Directory with avatar images')
         parser.add_argument('--cover_dir', type=str, default='/Users/behruz/Documents/ESSTUM/Web Programming/Readly/media/covers/example', help='Directory with cover images')
         parser.add_argument('--popular_share', type=float, default=0.25, help='Fraction of articles considered popular')
+        parser.add_argument('--buckets', type=int, default=100, help='Time buckets across the current year')
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -40,6 +44,8 @@ class Command(BaseCommand):
         avatar_dir = Path(options['avatar_dir'])
         cover_dir = Path(options['cover_dir'])
         popular_share = options['popular_share']
+        buckets = options['buckets']
+        spreader = YearSpreader(year=timezone.now().year, buckets=buckets)
 
         self.stdout.write(self.style.NOTICE('Starting demo seed...'))
 
@@ -64,6 +70,8 @@ class Command(BaseCommand):
             if created:
                 user.set_password('pass1234')
                 user.save()
+            # Распределим дату регистрации по году
+            set_user_date_joined(user.pk, spreader.next())
             # Ensure Profile
             profile, _ = Profile.objects.get_or_create(user=user)
             # Assign avatar to some users
@@ -82,7 +90,8 @@ class Command(BaseCommand):
             candidates = [x for x in users if x != u]
             following = random.sample(candidates, k=min(k, len(candidates)))
             for v in following:
-                Follow.objects.get_or_create(follower=u, following=v)
+                rel, _ = Follow.objects.get_or_create(follower=u, following=v)
+                set_created_at(Follow, rel.pk, spreader.next())
                 follow_count += 1
         self.stdout.write(self.style.SUCCESS(f'Follows created/ensured: ~{follow_count}'))
 
@@ -106,6 +115,7 @@ class Command(BaseCommand):
                 fp = random.choice(cover_files)
                 assign_image_field(a.cover, fp)
             a.save()
+            set_created_at(Article, a.pk, spreader.next())
             # tags
             for t in random.sample(tags_pool, k=random.randint(1, 3)):
                 a.tags.add(tag_objs[t])
@@ -136,28 +146,71 @@ class Command(BaseCommand):
             like_n = random.randint(30, 120) if is_popular else random.randint(0, 30)
             like_users = random.sample(users, k=min(like_n, len(users)))
             for u in like_users:
-                _, created = Like.objects.get_or_create(user=u, article=a)
+                like_obj, created = Like.objects.get_or_create(user=u, article=a)
                 if created:
                     total_likes += 1
+                set_created_at(Like, like_obj.pk, spreader.next())
 
             # Comments
             comment_n = random.randint(10, 30) if is_popular else random.randint(0, 10)
             comment_users = random.sample(users, k=min(comment_n, len(users)))
             for u in comment_users:
                 txt = random.choice(comment_texts)
-                Comment.objects.create(article=a, author=u, text=txt)
+                c = Comment.objects.create(article=a, author=u, text=txt)
                 total_comments += 1
+                set_created_at(Comment, c.pk, spreader.next())
 
             # Favorites (smaller share)
             fav_n = random.randint(5, 20) if is_popular else random.randint(0, 5)
             fav_users = random.sample(users, k=min(fav_n, len(users)))
             for u in fav_users:
-                _, created = Favorite.objects.get_or_create(user=u, article=a)
+                fav_obj, created = Favorite.objects.get_or_create(user=u, article=a)
                 if created:
                     total_favs += 1
+                set_created_at(Favorite, fav_obj.pk, spreader.next())
 
         self.stdout.write(self.style.SUCCESS(
             f'Interactions — likes: {total_likes}, comments: {total_comments}, favorites: {total_favs}'
         ))
 
         self.stdout.write(self.style.SUCCESS('Demo seed completed successfully.'))
+class YearSpreader:
+    """Генератор дат, равномерно распределённых по году в указанном количестве корзин.
+
+    Для анализа данных удобно получать квазирегулярное распределение: год делится на
+    `buckets` интервалов, а каждая следующая дата попадает в следующий интервал с
+    небольшим случайным джиттером внутри интервала.
+    """
+
+    def __init__(self, year: int, buckets: int = 100):
+        tz = timezone.get_current_timezone()
+        self.start = timezone.make_aware(datetime(year, 1, 1), tz)
+        self.end = timezone.make_aware(datetime(year + 1, 1, 1), tz)
+        total_seconds = int((self.end - self.start).total_seconds())
+        # Размер шага в секундах для одной корзины
+        self.buckets = max(1, buckets)
+        self.step = max(1, total_seconds // self.buckets)
+        self._i = 0
+
+    def next(self) -> datetime:
+        base = self.start + timedelta(seconds=self.step * (self._i % self.buckets))
+        jitter = random.randint(0, max(0, self.step - 1))
+        self._i += 1
+        return base + timedelta(seconds=jitter)
+
+
+def set_created_at(model_cls, pk, created_dt: datetime):
+    """Безопасно обновляет поле created_at у объекта с заданным pk."""
+    try:
+        model_cls.objects.filter(pk=pk).update(created_at=created_dt)
+    except Exception:
+        # Игнорируем любые ошибки обновления, чтобы сид не падал
+        pass
+
+
+def set_user_date_joined(pk, joined_dt: datetime):
+    """Обновляет дату регистрации пользователя (User.date_joined)."""
+    try:
+        User.objects.filter(pk=pk).update(date_joined=joined_dt)
+    except Exception:
+        pass

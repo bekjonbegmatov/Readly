@@ -3,7 +3,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 .vscode
+Gemini_Generated_*
 
+.DS_Store
 # C extensions
 *.so
 
