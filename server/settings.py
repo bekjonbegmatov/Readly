@@ -9,6 +9,24 @@ SECRET_KEY = 'django-insecure-t+h+o$89h^&=jrod1btc*ez+u_4_oo(6u8%u$x)+x0$w(h_im0
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
+# CSRF: доверенные Origin'ы для форм и AJAX
+CSRF_TRUSTED_ORIGINS = [
+    'http://readly.deltavpn.me',
+    'https://readly.deltavpn.me',
+    'http://readly.deltavpn.me:8080',
+    'https://readly.deltavpn.me:8080',
+    'http://159.203.93.227',
+    'https://159.203.93.227',
+    'http://159.203.93.227:8080',
+    'https://159.203.93.227:8080',
+    'http://localhost:8080',
+    'https://localhost:8080',
+    'http://readly.begmatov.dev',
+    'https://readly.begmatov.dev',
+    'http://readly.begmatov.dev:8080',
+    'https://readly.begmatov.dev:8080',
+]
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
