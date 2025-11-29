@@ -3,6 +3,7 @@ set -e
 
 # Apply migrations and collect static assets
 python manage.py migrate --noinput
+python manage.py create_default_admin
 python manage.py collectstatic --noinput
 
 # Start Gunicorn (через python -m, чтобы избежать проблем с PATH)

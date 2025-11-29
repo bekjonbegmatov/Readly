@@ -10,6 +10,7 @@ services:
     volumes:
       - media:/app/media
       - staticfiles:/app/staticfiles
+      - db_data:/app/data
     expose:
       - "8000"
 
@@ -29,3 +30,4 @@ services:
 volumes:
   media:
   staticfiles:
+  db_data:

@@ -198,6 +198,10 @@ cython_debug/
 .pypirc
 
 # Cursor
+
+# Project data (SQLite persists)
+data/
+!data/.gitkeep
 #  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
 #  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
 #  refer to https://docs.cursor.com/context/ignore-files
